@@ -33,6 +33,7 @@ int main() {
         cin>>a;
         add(i,a);
     }
+    
     for(int i=1;i<=m;i++) {
         int a,b,c;
         cin>>a>>b>>c;
