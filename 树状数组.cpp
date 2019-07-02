@@ -34,7 +34,7 @@ int main() {
         add(i,a);
     }
     
-    for(int i=1;i<=m;i++) {
+    for(int i=1;i<=m;i++)  {
         int a,b,c;
         cin>>a>>b>>c;
         if(a==1)
