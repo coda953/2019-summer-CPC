@@ -4,11 +4,6 @@
 #include<algorithm>
 using namespace std;
 const int maxn=300010;
-void read(int &x){
-    char c=getchar(); x=0;
-    for(;c>'9'||c<'0';c=getchar());
-    for(;c<='9'&&c>='0';c=getchar()) x=(x<<3)+(x<<1)+c-'0';
-}
 struct LCT {
     int sum[maxn],rev[maxn],ch[maxn][2],fa[maxn],stc[maxn],top;
     int isroot(int x){
@@ -64,7 +59,6 @@ struct LCT {
 int a[maxn];
 int n,m,opt,x,y;
 int main() {
-
     scanf("%d",&n);
     for(int i=1;i<=n;i++){
         scanf("%d",&a[i]);
