@@ -1,125 +1,90 @@
-#include<iostream>
-#include<cstdio>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
-#include<queue>
-#include<algorithm>
+//n个匹配串在文本串中出现多少次
+#include <iostream>
+#include <cstdio>
+#include <queue>
+
 using namespace std;
-struct Tree//字典树
-{
-    int fail;//失配指针
-    int vis[26];//子节点的位置
-    int end;//标记以这个节点结尾的单词编号
-}AC[100000];//Trie树
-int cnt=0;//Trie的指针
-struct Result
-{
-    int num;
-    int pos;
-}Ans[100000];//所有单词的出现次数
-bool operator <(Result a,Result b)
-{
-    if(a.num!=b.num)
-        return a.num>b.num;
-    else
-        return a.pos<b.pos;
-}
-string s[100000];
-inline void Clean(int x)
-{
-    memset(AC[x].vis,0,sizeof(AC[x].vis));
-    AC[x].fail=0;
-    AC[x].end=0;
-}
-inline void Build(string s,int Num)
-{
-    int l=s.length();
-    int now=0;//字典树的当前指针
-    for(int i=0;i<l;++i)//构造Trie树
-    {
-        if(AC[now].vis[s[i]-'a']==0)//Trie树没有这个子节点
-        {
-            AC[now].vis[s[i]-'a']=++cnt;//构造出来
-            Clean(cnt);
-        }
-        now=AC[now].vis[s[i]-'a'];//向下构造
-    }
-    AC[now].end=Num;//标记单词结尾
-}
-void Get_fail()//构造fail指针
-{
-    queue<int> Q;//队列
-    for(int i=0;i<26;++i)//第二层的fail指针提前处理一下
-    {
-        if(AC[0].vis[i]!=0)
-        {
-            AC[AC[0].vis[i]].fail=0;//指向根节点
-            Q.push(AC[0].vis[i]);//压入队列
-        }
-    }
-    while(!Q.empty())//BFS求fail指针
-    {
-        int u=Q.front();
-        Q.pop();
-        for(int i=0;i<26;++i)//枚举所有子节点
-        {
-            if(AC[u].vis[i]!=0)//存在这个子节点
-            {
-                AC[AC[u].vis[i]].fail=AC[AC[u].fail].vis[i];
-                //子节点的fail指针指向当前节点的
-                //fail指针所指向的节点的相同子节点
-                Q.push(AC[u].vis[i]);//压入队列
-            }
-            else//不存在这个子节点
-                AC[u].vis[i]=AC[AC[u].fail].vis[i];
-            //当前节点的这个子节点指向当
-            //前节点fail指针的这个子节点
-        }
-    }
-}
-int AC_Query(string s)//AC自动机匹配
-{
-    int l=s.length();
-    int now=0,ans=0;
-    for(int i=0;i<l;++i)
-    {
-        now=AC[now].vis[s[i]-'a'];//向下一层
-        for(int t=now;t;t=AC[t].fail)//循环求解
-            Ans[AC[t].end].num++;
-    }
-    return ans;
-}
+
+const int N = 200010;
+const int T = 200010;
+const int S = 2000010;
+
+void dfs(int u);
+void add(int u, int v);
+
+char s[S];
+queue<int> q;
+int head[T], nxt[T], to[T], cnt;
+int n, tr[T][26], fail[T], tot = 1, match[N], siz[T];
+
 int main()
 {
-    int n;
-    while(233)
+    int i, j, u;
+
+    scanf("%d", &n);
+
+    for (i = 1; i <= n; ++i)
     {
-        cin>>n;
-        if(n==0)break;
-        cnt=0;
-        Clean(0);
-        for(int i=1;i<=n;++i)
+        scanf("%s", s);
+        for (u = 1, j = 0; s[j]; ++j)
         {
-            cin>>s[i];
-            Ans[i].num=0;
-            Ans[i].pos=i;
-            Build(s[i],i);
+            int c = s[j] - 'a';
+            if (!tr[u][c]) tr[u][c] = ++tot;
+            u = tr[u][c];
         }
-        AC[0].fail=0;//结束标志
-        Get_fail();//求出失配指针
-        cin>>s[0];//文本串
-        AC_Query(s[0]);
-        sort(&Ans[1],&Ans[n+1]);
-        cout<<Ans[1].num<<endl;
-        cout<<s[Ans[1].pos]<<endl;
-        for(int i=2;i<=n;++i)
+        match[i] = u; // 记录每个模式串在 Trie 树上的终止节点
+    }
+
+    for (i = 0; i < 26; ++i) tr[0][i] = 1; // 一种比较与众不同（个人认为比较正确）的 AC 自动机建法，详见上文提到的我写的博客
+
+    q.push(1);
+
+    while (!q.empty())
+    {
+        u = q.front();
+        q.pop();
+        for (i = 0; i < 26; ++i)
         {
-            if(Ans[i].num==Ans[i-1].num)
-                cout<<s[Ans[i].pos]<<endl;
-            else
-                break;
+            if (tr[u][i])
+            {
+                fail[tr[u][i]] = tr[fail[u]][i];
+                q.push(tr[u][i]);
+            }
+            else tr[u][i] = tr[fail[u]][i];
         }
     }
+
+    scanf("%s", s);
+
+    for (u = 1, i = 0; s[i]; ++i)
+    {
+        u = tr[u][s[i] - 'a'];
+        ++siz[u]; // 记录匹配次数
+    }
+
+    for (i = 2; i <= tot; ++i) add(fail[i], i); // 建 fail 树
+
+    dfs(1); // 统计子树和
+
+    for (i = 1; i <= n; ++i) printf("%d\n", siz[match[i]]);
+
     return 0;
+}
+
+void dfs(int u)
+{
+    int i, v;
+    for (i = head[u]; i; i = nxt[i])
+    {
+        v = to[i];
+        dfs(v);
+        siz[u] += siz[v];
+    }
+}
+
+void add(int u, int v)
+{
+    nxt[++cnt] = head[u];
+    head[u] = cnt;
+    to[cnt] = v;
 }
